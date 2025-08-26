@@ -1,0 +1,18 @@
+{% extends "page.html" %}
+{% block page_title %}Data Insight{% endblock %}
+
+{% block content %}
+  <h1 class="page-heading">Data Insight</h1>
+  {% if not groups or groups|length == 0 %}
+    <p>Belum ada Insight Group. Tambahkan tag <code>insight</code> pada dataset beserta tag-topik lain (mis. <code>health</code>), atau jalankan sinkronisasi CLI.</p>
+  {% else %}
+    <ul class="dataset-list">
+      {% for g in groups %}
+        <li>
+          <a href="{{ h.url_for('group.read', id=g.name) }}">{{ g.title }}</a>
+          <span class="muted">— {{ g.package_count }} dataset</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}
