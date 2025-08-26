@@ -150,7 +150,9 @@ docker compose -f docker-compose.prod.yml exec ckan-web \  ckan -c /etc/ckan/pro
 
 1. Clone repo ini:
 ```bash
-git clone https://github.com/<your-org>/ckanet-insight.git
+docker compose exec root -u ckan bash
+cd src
+git clone https://github.com/semet85/ckan_insight/ckanet-insight.git
 cd ckanet-insight
 ```
 
