@@ -1,3 +1,4 @@
+import logging
 import click
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
@@ -7,6 +8,8 @@ from .lib.insight_groups import (
     sync_insight_groups_for_package,
     rebuild_all_insight_groups,
 )
+
+log = logging.getLogger(__name__)
 
 
 def _get_insight_tag_from_config():
@@ -35,13 +38,13 @@ class InsightPlugin(plugins.SingletonPlugin):
         try:
             sync_insight_groups_for_package(pkg_dict, _get_insight_tag_from_config())
         except Exception:
-            toolkit.error('ckanet-insight: after_create sync failed', exc_info=True)
+            log.exception('ckanet-insight: after_create sync failed')
 
     def after_update(self, context, pkg_dict):
         try:
             sync_insight_groups_for_package(pkg_dict, _get_insight_tag_from_config())
         except Exception:
-            toolkit.error('ckanet-insight: after_update sync failed', exc_info=True)
+            log.exception('ckanet-insight: after_update sync failed')
 
     # IClick
     def get_commands(self):

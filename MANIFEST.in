@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+recursive-include ckanext *.html *.js *.css *.png *.jpg *.gif *.svg *.json *.ico *.less *.scss *.j2 *.txt
+recursive-include ckanext *.py

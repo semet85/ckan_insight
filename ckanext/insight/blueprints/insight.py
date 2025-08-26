@@ -5,6 +5,7 @@ blueprint = Blueprint('ckanet_insight', __name__)
 
 @blueprint.route('/insights/')
 def insights_home():
+    """List all Insight Groups with dataset counts."""
     ctx = {'ignore_auth': True}
     groups = toolkit.get_action('group_list')(ctx, {'all_fields': True})
     insight_groups = [g for g in groups if (g.get('name') or '').startswith('insight-')]
