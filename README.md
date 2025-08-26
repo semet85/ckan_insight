@@ -152,7 +152,7 @@ docker compose -f docker-compose.prod.yml exec ckan-web \  ckan -c /etc/ckan/pro
 ```bash
 docker compose exec -u root ckan bash
 cd src
-git clone https://github.com/semet85/ckan_insight/ckanet-insight.git
+git clone https://github.com/semet85/ckanet-insight.git
 cd ckanet-insight
 ```
 
