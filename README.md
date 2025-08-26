@@ -152,8 +152,12 @@ docker compose -f docker-compose.prod.yml exec ckan-web \  ckan -c /etc/ckan/pro
 ```bash
 docker compose exec -u root ckan bash
 cd src
-git clone https://github.com/semet85/ckanet-insight.git
-cd ckanet-insight
+git clone git clone https://github.com/semet85/ckanet-insight.git
+cd ckan_insight
+python setup.py develop
+pip install -r dev-requirements.txt
+apt update && apt install nano -y
+nano /srv/app/production.ini
 ```
 
 2. Install dalam mode *develop* (editable):
