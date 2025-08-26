@@ -17,7 +17,6 @@ def _site_context():
 
 
 def _ensure_group(tag_display):
-    """Ensure a group exists for this tag. Returns the group name."""
     ctx = _site_context()
     name = INSIGHT_GROUP_PREFIX + _slugify(tag_display)
     title = f'Insight: {tag_display}'
@@ -54,7 +53,6 @@ def _add_pkg_to_group(group_name, package_id):
             'capacity': 'public'
         })
     except toolkit.ValidationError:
-        # already a member
         pass
 
 
@@ -71,11 +69,6 @@ def _remove_pkg_from_group(group_name, package_id):
 
 
 def sync_insight_groups_for_package(pkg_dict, insight_tag='insight'):
-    """
-    Synchronize a single dataset with Insight Groups.
-    - If the dataset lacks the marker tag, remove it from all insight-* groups.
-    - Else, ensure groups for each *other* tag exist and add membership accordingly.
-    """
     if not pkg_dict or not pkg_dict.get('id'):
         return
 
@@ -84,7 +77,6 @@ def sync_insight_groups_for_package(pkg_dict, insight_tag='insight'):
     tags_lower = set([t.lower() for t in tags])
 
     if insight_tag.lower() not in tags_lower:
-        # remove from all insight-* groups
         for g in _current_insight_groups_for_package(pkg_dict):
             _remove_pkg_from_group(g, pkg_dict['id'])
         return
@@ -97,24 +89,19 @@ def sync_insight_groups_for_package(pkg_dict, insight_tag='insight'):
         wanted_groups.add(gname)
         _add_pkg_to_group(gname, pkg_dict['id'])
 
-    # cleanup
     current = _current_insight_groups_for_package(pkg_dict)
     for g in (current - wanted_groups):
         _remove_pkg_from_group(g, pkg_dict['id'])
 
 
 def rebuild_all_insight_groups(insight_tag='insight'):
-    """
-    Rebuild across all datasets (batch). Returns statistics dict.
-    """
     ctx = _site_context()
     rows = 100
     start = 0
-    created_groups = 0  # best-effort, not tracked precisely here
+    created_groups = 0
     updated_links = 0
     removed_links = 0
 
-    # 1) Align datasets that have the marker tag
     while True:
         q = f'tags:{insight_tag}'
         res = toolkit.get_action('package_search')(ctx, {'q': q, 'rows': rows, 'start': start})
@@ -127,7 +114,6 @@ def rebuild_all_insight_groups(insight_tag='insight'):
         if start >= (res.get('count') or 0):
             break
 
-    # 2) Remove stray memberships for datasets without marker tag
     start = 0
     while True:
         res = toolkit.get_action('package_search')(ctx, {'q': f'-tags:{insight_tag}', 'rows': rows, 'start': start})
