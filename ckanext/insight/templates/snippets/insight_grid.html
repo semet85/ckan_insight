@@ -143,8 +143,10 @@
       AOS.init({
         duration: 600,
         easing: 'ease-out-cubic',
-        once: true,
-        offset: 60
+        once: false,
+        mirror: true,
+        offset: 60,
+        anchorPlacement: 'top-bottom'
       });
       // Refresh setelah load fonts/resize
       window.addEventListener('load', function(){ AOS.refresh(); });
