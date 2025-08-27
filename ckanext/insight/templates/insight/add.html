@@ -1,0 +1,41 @@
+{% extends "page.html" %}
+{% block page_title %}Tambah Insight{% endblock %}
+
+{% block content %}
+  <h1 class="page-heading">Tandai Dataset sebagai Insight</h1>
+
+  <form class="form-horizontal" method="post" action="">
+    {{ h.csrf_input() }}
+
+    <div class="control-group">
+      <label class="control-label" for="dataset">Dataset</label>
+      <div class="controls">
+        <input id="dataset" name="dataset" type="text" value="{{ dataset or '' }}" placeholder="name atau id dataset" required>
+        <p class="help-block">
+          Masukkan <em>name</em> atau <em>id</em> dataset yang ingin ditandai sebagai Insight.
+        </p>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="topics">Tag topik</label>
+      <div class="controls">
+        <input id="topics" name="topics" type="text" value="{{ topics or '' }}" placeholder="mis: health, 2024">
+        <p class="help-block">
+          Pisahkan dengan koma. Tag penanda <code>{{ marker_tag }}</code> akan
+          ditambahkan otomatis.
+        </p>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Simpan Insight</button>
+      <a class="btn" href="{{ h.url_for('ckanet_insight.insights_home') }}">Batal</a>
+    </div>
+  </form>
+
+  <hr>
+  <p class="muted">
+    Alternatif: <a href="{{ h.url_for('dataset.new') }}">buat dataset baru</a> lalu tambahkan tag <code>{{ marker_tag }}</code> dan tag topik saat menyimpan.
+  </p>
+{% endblock %}

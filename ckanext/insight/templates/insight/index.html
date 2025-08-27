@@ -3,6 +3,16 @@
 
 {% block content %}
   <h1 class="page-heading">Data Insight</h1>
+
+  <div class="page-actions" style="margin: 10px 0 20px;">
+    <a class="btn btn-primary" href="{{ h.url_for('ckanet_insight.insights_add') }}">
+      <i class="fa fa-plus"></i> Tambah Insight
+    </a>
+    <a class="btn btn-default" href="{{ h.url_for('dataset.new') }}">
+      Buat Dataset Baru
+    </a>
+  </div>
+
   {% if not groups or groups|length == 0 %}
     <p>Belum ada Insight Group. Tambahkan tag <code>insight</code> pada dataset beserta tag-topik lain (mis. <code>health</code>), atau jalankan sinkronisasi CLI.</p>
   {% else %}
