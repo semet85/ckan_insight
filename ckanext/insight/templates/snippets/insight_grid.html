@@ -2,7 +2,7 @@
    Cara pakai:
    {% snippet 'snippets/insight_grid.html',
         title='Data Insight',
-        limit=6,
+        limit=7,
         order='count_desc',
         q='',
         show_more_url=h.url_for('ckanet_insight.insights_home')
@@ -10,7 +10,7 @@
 #}
 
 {% set _title = title|default('Data Insight') %}
-{% set _limit = limit|default(6) %}
+{% set _limit = limit|default(7) %}
 {% set _order = order|default('count_desc') %}
 {% set _q     = q|default('') %}
 {% set _more  = show_more_url|default(h.url_for('ckanet_insight.insights_home')) %}
@@ -58,7 +58,7 @@
   .ins-img.is-ready{ opacity:1; }
   .ins-ph{ display:flex; align-items:center; justify-content:center; font-size:44px; color:#b9c3d1; }
   .ins-chip{
-    position:absolute; top:10px; left:10px; background:var(--ins-chip-bg); border:1px solid var(--ins-chip-bd);
+    position:absolute; top:10px; left:10px; border:1px solid var(--ins-chip-bd);
     color:var(--ins-primary); border-radius:999px; padding:4px 10px; font-size:12px; line-height:1;
   }
 
@@ -73,7 +73,7 @@
 
 <div class="module ins-section">
   <div class="module-content">
-    <h2 class="text-center mb-4"> <i class="fas fa-id-card"></i>Data Insight</h2>
+    <h2 class="text-center mb-4"> <i class="fas fa-id-card"></i> Data Insight</h2>
     <div class="ins-header">
       <!--<h3 class="module-heading">{{ _title }}</h3>-->
       <a class="btn-ghost" href="{{ _more }}">Lihat semua <i class="fa fa-arrow-right"></i></a>
