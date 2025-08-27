@@ -13,8 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def _get_insight_tag_from_config():
-    cfg = toolkit.config
-    return cfg.get('ckanet.insight_tag', 'insight')
+    return toolkit.config.get('ckanet.insight_tag', 'insight')
 
 
 class InsightPlugin(plugins.SingletonPlugin):
@@ -64,12 +63,12 @@ class InsightPlugin(plugins.SingletonPlugin):
             stats = rebuild_all_insight_groups(insight_tag)
             click.echo(f"Done: created_groups={stats['created_groups']}, "
                        f"updated_links={stats['updated_links']}, removed_links={stats['removed_links']}")
-    
+
+        return [insight]  # ⬅️ pastikan baris ini ADA di akhir get_commands
+
     # ITemplateHelpers
     def get_helpers(self):
         from .helpers import ckanet_insight_list
         return {
             "ckanet_insight_list": ckanet_insight_list,
         }
-
-        return [insight]
