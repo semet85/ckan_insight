@@ -1,24 +1,44 @@
 {% extends "page.html" %}
 {% block page_title %}Insights{% endblock %}
+
 {% block styles %}
   {{ super() }}
-  {# css tambahan untuk grid kartu #}
-  {% resource 'insight/insight.css' %}
+  <style>
+    /* toolbar */
+    .insight-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 12px;}
+    .insight-toolbar .search-input{display:flex;gap:6px;}
+    .insight-toolbar .search-input input{padding:6px 10px;min-width:260px;border:1px solid #ddd;border-radius:4px;}
+    /* grid */
+    .insight-grid{display:grid;grid-template-columns: repeat(auto-fill, minmax(220px,1fr));gap:14px;}
+    .insight-card{background:#fff;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden;transition:box-shadow .15s ease, transform .05s ease;}
+    .insight-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.08); transform: translateY(-1px);}
+    .insight-card .card-link{display:block;color:inherit;text-decoration:none}
+    .insight-card .thumb{height:130px;background:#fafafa;display:flex;align-items:center;justify-content:center;}
+    .insight-card .thumb img{max-width:100%;max-height:100%;object-fit:contain;}
+    .insight-card .thumb-placeholder{font-size:40px;color:#bbb;}
+    .insight-card .meta{padding:12px;}
+    .insight-card .title{font-size:16px;line-height:1.25;margin:0 0 6px;max-height:40px;overflow:hidden;}
+    .insight-card .count{color:#888;font-size:13px;}
+    /* pagination */
+    .pagination{margin:18px 0;}
+    .pagination li{display:inline-block;margin-right:4px;}
+    .pagination li a{display:inline-block;padding:6px 10px;border:1px solid #ddd;border-radius:4px;text-decoration:none}
+    .pagination li.active a{background:#0d6efd;color:#fff;border-color:#0d6efd}
+    .pagination li.disabled a{color:#bbb;pointer-events:none}
+  </style>
 {% endblock %}
 
 {% block content %}
   <div class="page-heading-wrapper" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
     <h1 class="page-heading" style="margin:0;">Insights</h1>
     <div class="page-actions">
-  {% if is_sysadmin or (c.userobj and c.userobj.sysadmin) %}
-    <a class="btn btn-primary" href="{{ h.url_for('ckanet_insight.insights_add') }}">
-      <i class="fa fa-plus"></i> Tambah Insight
-    </a>
-  {% endif %}
-  <a class="btn btn-default" href="{{ h.url_for('dataset.new') }}">
-    Buat Dataset Baru
-  </a>
-</div>
+      {% if is_sysadmin or (c.userobj and c.userobj.sysadmin) %}
+        <a class="btn btn-primary" href="{{ h.url_for('ckanet_insight.insights_add') }}">
+          <i class="fa fa-plus"></i> Tambah Insight
+        </a>
+      {% endif %}
+      <a class="btn btn-default" href="{{ h.url_for('dataset.new') }}">Buat Dataset Baru</a>
+    </div>
   </div>
 
   <form method="get" class="form-inline insight-toolbar">
@@ -67,21 +87,14 @@
       {% endfor %}
     </div>
 
-    {# pagination #}
     {% if pages > 1 %}
       <ul class="pagination">
         {% set qs_base = 'q=' ~ (q or '') ~ '&order=' ~ (order or 'name_asc') %}
-        <li class="{% if page==1 %}disabled{% endif %}">
-          <a href="?{{ qs_base }}&page={{ page-1 if page>1 else 1 }}">&laquo;</a>
-        </li>
+        <li class="{% if page==1 %}disabled{% endif %}"><a href="?{{ qs_base }}&page={{ page-1 if page>1 else 1 }}">&laquo;</a></li>
         {% for p in range(1, pages+1) %}
-          <li class="{% if p==page %}active{% endif %}">
-            <a href="?{{ qs_base }}&page={{ p }}">{{ p }}</a>
-          </li>
+          <li class="{% if p==page %}active{% endif %}"><a href="?{{ qs_base }}&page={{ p }}">{{ p }}</a></li>
         {% endfor %}
-        <li class="{% if page==pages %}disabled{% endif %}">
-          <a href="?{{ qs_base }}&page={{ page+1 if page<pages else pages }}">&raquo;</a>
-        </li>
+        <li class="{% if page==pages %}disabled{% endif %}"><a href="?{{ qs_base }}&page={{ page+1 if page<pages else pages }}">&raquo;</a></li>
       </ul>
     {% endif %}
   {% endif %}
