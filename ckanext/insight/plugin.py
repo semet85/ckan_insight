@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import click
 import ckan.plugins as plugins
@@ -54,21 +55,27 @@ class InsightPlugin(plugins.SingletonPlugin):
             pass
 
         @insight.command('sync-groups')
-        @click.option('--tag', 'insight_tag', default=None,
-                      help='Marker tag for insight datasets (default: "insight")')
+        @click.option(
+            '--tag', 'insight_tag', default=None,
+            help='Marker tag for insight datasets (default: "insight")'
+        )
         def sync_groups_cmd(insight_tag):
             if not insight_tag:
                 insight_tag = _get_insight_tag_from_config()
-            click.echo(f'Rebuilding insight groups with marker tag "{insight_tag}"...')
+            click.echo('Rebuilding insight groups with marker tag "%s"...' % insight_tag)
             stats = rebuild_all_insight_groups(insight_tag)
-            click.echo(f"Done: created_groups={stats['created_groups']}, "
-                       f"updated_links={stats['updated_links']}, removed_links={stats['removed_links']}")
+            click.echo(
+                "Done: created_groups=%s, updated_links=%s, removed_links=%s" %
+                (stats['created_groups'], stats['updated_links'], stats['removed_links'])
+            )
 
-        return [insight]  # ⬅️ pastikan baris ini ADA di akhir get_commands
+        return [insight]  # penting: return list of click groups
 
     # ITemplateHelpers
     def get_helpers(self):
-        from .helpers import ckanet_insight_list
+        # pastikan helpers.py punya dua fungsi ini
+        from .helpers import ckanet_insight_list, ckanet_count_groups_startswith
         return {
-            "ckanet_insight_list": ckanet_insight_list,
+            'ckanet_insight_list': ckanet_insight_list,
+            'ckanet_count_groups_startswith': ckanet_count_groups_startswith,
         }
