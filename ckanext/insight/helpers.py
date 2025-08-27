@@ -64,3 +64,33 @@ def ckanet_count_groups_startswith(prefix="desa", limit=5000):
         if title.startswith(kw) or name.startswith(kw):
             cnt += 1
     return cnt
+
+def _ctx():
+    return {"ignore_auth": True}
+
+def ckanet_org_counts(prefix="desa", limit=5000):
+    """
+    Hitung organisasi:
+      - total: semua organisasi
+      - desa: title/name diawali 'prefix' (case-insensitive)
+      - non_desa: total - desa (min 0)
+
+    Return: dict {total, desa, non_desa}
+    """
+    pref = (prefix or "").strip().lower()
+    orgs = toolkit.get_action("organization_list")(
+        _ctx(), {"all_fields": True, "limit": int(limit)}
+    )
+    total = len(orgs)
+
+    desa = 0
+    for o in orgs:
+        t = (o.get("title") or o.get("name") or "").strip().lower()
+        if t.startswith(pref):
+            desa += 1
+
+    non_desa = total - desa
+    if non_desa < 0:
+        non_desa = 0
+
+    return {"total": total, "desa": desa, "non_desa": non_desa}

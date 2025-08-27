@@ -74,8 +74,10 @@ class InsightPlugin(plugins.SingletonPlugin):
     # ITemplateHelpers
     def get_helpers(self):
         # pastikan helpers.py punya dua fungsi ini
-        from .helpers import ckanet_insight_list, ckanet_count_groups_startswith
+        from .helpers import ckanet_insight_list, ckanet_count_groups_startswith, 
+        ckanet_org_counts,
         return {
             'ckanet_insight_list': ckanet_insight_list,
             'ckanet_count_groups_startswith': ckanet_count_groups_startswith,
+            "ckanet_org_counts": ckanet_org_counts,
         }
