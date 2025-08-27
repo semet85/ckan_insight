@@ -22,6 +22,7 @@ class InsightPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IBlueprint)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IClick)
+    plugins.implements(plugins.ITemplateHelpers)
 
     # IConfigurer
     def update_config(self, config_):
@@ -63,5 +64,12 @@ class InsightPlugin(plugins.SingletonPlugin):
             stats = rebuild_all_insight_groups(insight_tag)
             click.echo(f"Done: created_groups={stats['created_groups']}, "
                        f"updated_links={stats['updated_links']}, removed_links={stats['removed_links']}")
+    
+    # ITemplateHelpers
+    def get_helpers(self):
+        from .helpers import ckanet_insight_list
+        return {
+            "ckanet_insight_list": ckanet_insight_list,
+        }
 
         return [insight]

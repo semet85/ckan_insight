@@ -1,0 +1,68 @@
+{# Snippet: grid insight untuk homepage/layout1
+   Cara panggil:
+   {% snippet 'snippets/insight_grid.html',
+        title='Data Insight',
+        limit=6,
+        order='count_desc',
+        q='',
+        show_more_url=h.url_for('ckanet_insight.insights_home')
+   %}
+#}
+
+{% set _title = title|default('Data Insight') %}
+{% set _limit = limit|default(6) %}
+{% set _order = order|default('count_desc') %}
+{% set _q     = q|default('') %}
+{% set _more  = show_more_url|default(h.url_for('ckanet_insight.insights_home')) %}
+
+{% set _groups = h.ckanet_insight_list(_limit, _order, _q) %}
+
+<style>
+  .ins-grid{ --min:220px; display:grid; grid-template-columns:repeat(auto-fill,minmax(var(--min),1fr)); gap:12px; }
+  .ins-card{ background:#fff; border:1px solid #e8e8e8; border-radius:8px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow .15s ease, transform .05s ease; }
+  .ins-card:hover{ box-shadow:0 6px 20px rgba(0,0,0,.08); transform: translateY(-1px); }
+  .ins-card .thumb{ height:120px; background:#fafafa; display:flex; align-items:center; justify-content:center; border-bottom:1px solid #f0f0f0; }
+  .ins-card .thumb img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .ins-card .thumb .ph{ font-size:36px; color:#bbb; }
+  .ins-card .meta{ padding:10px 12px 12px; display:flex; justify-content:space-between; gap:10px; }
+  .ins-card .title{ font-size:15px; margin:0 0 6px; line-height:1.25; max-height:38px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .ins-card .desc{ color:#666; font-size:12px; margin:0 0 8px; max-height:32px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .ins-card .badge{ align-self:flex-start; background:#eef5ff; color:#0b5ed7; border:1px solid #dbe8ff; font-size:12px; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+  .ins-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+</style>
+
+<div class="module">
+  <div class="module-content">
+    <div class="ins-header">
+      <h3 class="module-heading">{{ _title }}</h3>
+      <a class="btn btn-sm btn-default" href="{{ _more }}">Lihat semua</a>
+    </div>
+
+    {% if not _groups %}
+      <p class="muted">Belum ada insight untuk ditampilkan.</p>
+    {% else %}
+      <div class="ins-grid">
+        {% for g in _groups %}
+          <a class="ins-card" href="{{ h.url_for('group.read', id=g.name) }}">
+            <div class="thumb">
+              {% if g.image_url %}
+                <img src="{{ g.image_url }}" alt="{{ g.title }}">
+              {% else %}
+                <div class="ph"><i class="fa fa-folder-open"></i></div>
+              {% endif %}
+            </div>
+            <div class="meta">
+              <div style="flex:1 1 auto;">
+                <div class="title" title="{{ g.title }}">{{ g.title }}</div>
+                {% if g.description %}
+                  <div class="desc">{{ g.description }}</div>
+                {% endif %}
+              </div>
+              <span class="badge">{{ g.package_count }} ds</span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>
