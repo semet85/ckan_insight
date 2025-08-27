@@ -1,14 +1,4 @@
-{# Snippet: grid insight modern untuk homepage/layout1
-   Cara pakai:
-   {% snippet 'snippets/insight_grid.html',
-        title='Data Insight',
-        limit=7,
-        order='count_desc',
-        q='',
-        show_more_url=h.url_for('ckanet_insight.insights_home')
-   %}
-#}
-
+{# Snippet: grid insight modern + AOS (Animate On Scroll) #}
 {% set _title = title|default('Data Insight') %}
 {% set _limit = limit|default(7) %}
 {% set _order = order|default('count_desc') %}
@@ -17,7 +7,7 @@
 {% set _groups = h.ckanet_insight_list(_limit, _order, _q) %}
 
 <style>
-  /* ==== Design tokens (bisa kamu tweak) ==== */
+  /* ==== Design tokens ==== */
   .ins-section{ --ins-gap:14px; --ins-radius:14px; --ins-shadow:0 6px 24px rgba(0,0,0,.08);
     --ins-card-bg:#fff; --ins-border:#e9edf2; --ins-text:#1c2330; --ins-muted:#637083; --ins-primary:#0b5ed7; --ins-chip-bg:#eef5ff; --ins-chip-bd:#dbe8ff; }
   @media (prefers-color-scheme: dark){
@@ -43,20 +33,20 @@
   .ins-card{
     background:var(--ins-card-bg); border:1px solid var(--ins-border); border-radius:var(--ins-radius);
     overflow:hidden; display:flex; flex-direction:column; text-decoration:none; color:inherit;
-    transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+    transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease; will-change: transform, box-shadow;
   }
   .ins-card:hover{ transform:translateY(-2px); box-shadow:var(--ins-shadow); border-color:rgba(11,94,215,.35); }
 
   /* Media: ratio 16:9 dengan fallback */
   .ins-media{ position:relative; background:#f6f8fb; }
-  .ins-media{ aspect-ratio:16/9; } /* modern browsers */
+  .ins-media{ aspect-ratio:16/9; }
   @supports not (aspect-ratio: 16 / 9){
     .ins-media::before{ content:""; display:block; padding-top:56%; }
   }
   .ins-media > *{ position:absolute; inset:0; }
   .ins-img{ width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity .25s ease; }
   .ins-img.is-ready{ opacity:1; }
-  .ins-ph{ display:flex; align-items:center; justify-content:center; font-size:44px; color:#b9c3d1; }
+  .ins-ph{ display:flex; align-items:center; justify-content:center; font-size:44px; color:#b9c3d1; background:#f6f8fb; }
   .ins-chip{
     position:absolute; top:10px; left:10px; border:1px solid var(--ins-chip-bd);
     color:var(--ins-primary); border-radius:999px; padding:4px 10px; font-size:12px; line-height:1;
@@ -71,20 +61,24 @@
   .ins-empty{ color:var(--ins-muted); text-align:center; padding:10px 0 0; }
 </style>
 
-<div class="module ins-section">
+<div class="module ins-section" id="insight-grid-section">
   <div class="module-content">
-    <h2 class="text-center mb-4"> <i class="fas fa-id-card"></i> Data Insight</h2>
-    <div class="ins-header">
-      <!--<h3 class="module-heading">{{ _title }}</h3>-->
+    <h2 class="text-center mb-4" data-aos="fade-up"><i class="fas fa-id-card"></i> Data Insight</h2>
+    <div class="ins-header" data-aos="fade-up" data-aos-delay="80">
+      <!-- <h3 class="module-heading">{{ _title }}</h3> -->
       <a class="btn-ghost" href="{{ _more }}">Lihat semua <i class="fa fa-arrow-right"></i></a>
     </div>
 
     {% if not _groups %}
-      <p class="ins-empty">Belum ada insight untuk ditampilkan.</p>
+      <p class="ins-empty" data-aos="fade-up" data-aos-delay="120">Belum ada insight untuk ditampilkan.</p>
     {% else %}
       <div class="ins-grid">
         {% for g in _groups %}
-          <a class="ins-card" href="{{ h.url_for('group.read', id=g.name) }}" aria-label="Buka grup {{ g.title }}">
+          {# Staggered delay: 0,60,120,... #}
+          {% set _delay = (loop.index0 % 6) * 60 %}
+          <a class="ins-card" href="{{ h.url_for('group.read', id=g.name) }}"
+             aria-label="Buka grup {{ g.title }}"
+             data-aos="fade-up" data-aos-delay="{{ _delay }}" data-aos-duration="650">
             <div class="ins-media">
               {% if g.image_url %}
                 <img class="ins-img" loading="lazy" src="{{ g.image_url }}" alt="{{ g.title }}">
@@ -105,15 +99,56 @@
 </div>
 
 <script>
-  // Fade-in gambar saat siap + fallback ke placeholder jika gagal
+  // Lazy-image fade-in + refresh AOS setelah gambar siap
   (function(){
-    var imgs = document.currentScript.previousElementSibling.querySelectorAll('.ins-img');
+    var root = document.getElementById('insight-grid-section');
+    if(!root) return;
+    var imgs = root.querySelectorAll('.ins-img');
+    var pending = imgs.length;
+    function onOneReady(img){
+      img.classList.add('is-ready');
+      if (typeof AOS !== 'undefined') { AOS.refresh(); }
+    }
     imgs.forEach(function(img){
-      function ready(){ img.classList.add('is-ready'); }
-      if (img.complete) ready(); else img.addEventListener('load', ready, {once:true});
+      if (img.complete && img.naturalWidth) { onOneReady(img); return; }
+      img.addEventListener('load', function(){ onOneReady(img); }, {once:true});
       img.addEventListener('error', function(){
-        img.replaceWith(Object.assign(document.createElement('div'), {className:'ins-ph', innerHTML:'<i class="fa fa-folder-open"></i>'}));
+        var ph = document.createElement('div');
+        ph.className = 'ins-ph';
+        ph.innerHTML = '<i class="fa fa-folder-open"></i>';
+        img.replaceWith(ph);
+        if (typeof AOS !== 'undefined') { AOS.refresh(); }
       }, {once:true});
+    });
+  })();
+
+  // Load AOS (CSS/JS) sekali saja, lalu init
+  (function(){
+    function ensureCss(href){
+      if ([].some.call(document.styleSheets, function(s){ return (s.href||'').indexOf('aos') !== -1; })) return;
+      var l = document.createElement('link');
+      l.rel = 'stylesheet'; l.href = 'https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css';
+      document.head.appendChild(l);
+    }
+    function ensureJs(cb){
+      if (window.AOS){ cb(); return; }
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js';
+      s.onload = cb;
+      document.head.appendChild(s);
+    }
+    ensureCss();
+    ensureJs(function(){
+      // Init AOS
+      AOS.init({
+        duration: 600,
+        easing: 'ease-out-cubic',
+        once: true,
+        offset: 60
+      });
+      // Refresh setelah load fonts/resize
+      window.addEventListener('load', function(){ AOS.refresh(); });
+      window.addEventListener('resize', function(){ AOS.refresh(); });
     });
   })();
 </script>
