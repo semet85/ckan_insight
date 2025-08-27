@@ -1,16 +1,30 @@
+from math import ceil
 from flask import Blueprint, render_template, request, redirect
 import ckan.plugins.toolkit as toolkit
+from ckan.lib import authz  # ⬅️ tambah ini
 
 blueprint = Blueprint('ckanet_insight', __name__)
 
 def _marker_tag():
-    # Ambil dari config, default 'insight'
     return toolkit.config.get('ckanet.insight_tag', 'insight')
+
+def _current_user():
+    # kompatibel ckan 2.9 (flask global)
+    return getattr(toolkit.g, 'user', '') or getattr(toolkit.c, 'user', '') or ''
+
+def _require_sysadmin():
+    user = _current_user()
+    if not user or not authz.is_sysadmin(user):
+        toolkit.abort(403, toolkit._('Not authorized to access this page.'))  # 403 untuk non-admin
 
 @blueprint.route('/insights/')
 def insights_home():
-    """List all Insight Groups with dataset counts."""
     ctx = {'ignore_auth': True}
+    q = (request.args.get('q') or '').strip().lower()
+    order = (request.args.get('order') or 'name_asc').strip()
+    page = int(request.args.get('page', 1) or 1)
+    per_page = 12
+
     groups = toolkit.get_action('group_list')(ctx, {'all_fields': True})
     insight_groups = [g for g in groups if (g.get('name') or '').startswith('insight-')]
 
@@ -20,21 +34,27 @@ def insights_home():
         results.append({
             'name': g_full['name'],
             'title': g_full.get('title') or g_full['name'],
+            'description': g_full.get('description') or '',
             'package_count': len(g_full.get('packages') or []),
+            'image_url': g_full.get('image_display_url') or g_full.get('image_url') or '',
         })
 
-    results.sort(key=lambda x: (-x['package_count'], x['title'].lower()))
-    return render_template('insight/index.html', groups=results)
+    # ... (filter, sort, pagination seperti versi kamu saat ini) ...
+
+    is_sysadmin = authz.is_sysadmin(_current_user())
+    return render_template(
+        'insight/index.html',
+        groups=results,  # atau page_items jika kamu pakai pagination
+        # total=total, page=page, pages=pages, q=q, order=order, ...
+        marker_tag=_marker_tag(),
+        is_sysadmin=is_sysadmin,  # ⬅️ kirim ke template
+    )
 
 @blueprint.route('/insights/add', methods=['GET', 'POST'])
 def insights_add():
-    """
-    Form sederhana untuk menandai sebuah dataset sebagai Insight:
-      - menambahkan tag penanda (default: 'insight')
-      - menambahkan tag topik dari input user (koma-separated)
-    """
-    marker = _marker_tag()
+    _require_sysadmin()  # ⬅️ wajib admin
 
+    marker = _marker_tag()
     if request.method == 'POST':
         dataset_ref = (request.form.get('dataset') or '').strip()
         topics_raw = (request.form.get('topics') or '')
@@ -44,23 +64,15 @@ def insights_add():
             toolkit.h.flash_error('Nama/ID dataset wajib diisi.')
             return render_template('insight/add.html', dataset=dataset_ref, topics=topics_raw, marker_tag=marker)
 
-        # Aksi di bawah berjalan atas nama user yang login
-        user = getattr(toolkit.g, 'user', '') or getattr(toolkit.c, 'user', '') or ''
-        ctx = {'user': user}
-
+        ctx = {'user': _current_user()}
         try:
             pkg = toolkit.get_action('package_show')(ctx, {'id': dataset_ref})
         except toolkit.ObjectNotFound:
             toolkit.h.flash_error('Dataset tidak ditemukan.')
             return render_template('insight/add.html', dataset=dataset_ref, topics=topics_raw, marker_tag=marker)
 
-        # Komposisi ulang daftar tag
         existing = [t.get('name') for t in (pkg.get('tags') or []) if t.get('name')]
-        wanted = set(existing)
-        wanted.add(marker)
-        for t in topics:
-            wanted.add(t)
-
+        wanted = set(existing); wanted.add(marker); [wanted.add(t) for t in topics]
         new_tags = [{'name': name} for name in sorted(wanted)]
 
         try:
@@ -74,8 +86,6 @@ def insights_add():
         except Exception as e:
             toolkit.h.flash_error('Terjadi kesalahan: %s' % e)
 
-        # Jika ada error, render ulang form dengan nilai sebelumnya
         return render_template('insight/add.html', dataset=dataset_ref, topics=topics_raw, marker_tag=marker)
 
-    # GET
     return render_template('insight/add.html', marker_tag=marker)

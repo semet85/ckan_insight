@@ -1,28 +1,88 @@
 {% extends "page.html" %}
-{% block page_title %}Data Insight{% endblock %}
+{% block page_title %}Insights{% endblock %}
+{% block styles %}
+  {{ super() }}
+  {# css tambahan untuk grid kartu #}
+  {% resource 'insight/insight.css' %}
+{% endblock %}
 
 {% block content %}
-  <h1 class="page-heading">Data Insight</h1>
-
-  <div class="page-actions" style="margin: 10px 0 20px;">
+  <div class="page-heading-wrapper" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <h1 class="page-heading" style="margin:0;">Insights</h1>
+    <div class="page-actions">
+  {% if is_sysadmin or (c.userobj and c.userobj.sysadmin) %}
     <a class="btn btn-primary" href="{{ h.url_for('ckanet_insight.insights_add') }}">
       <i class="fa fa-plus"></i> Tambah Insight
     </a>
-    <a class="btn btn-default" href="{{ h.url_for('dataset.new') }}">
-      Buat Dataset Baru
-    </a>
+  {% endif %}
+  <a class="btn btn-default" href="{{ h.url_for('dataset.new') }}">
+    Buat Dataset Baru
+  </a>
+</div>
   </div>
 
+  <form method="get" class="form-inline insight-toolbar">
+    <div class="insight-toolbar-left">
+      <div class="search-input">
+        <input type="text" name="q" value="{{ q or '' }}" placeholder="Cari Insight...">
+        <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+      </div>
+    </div>
+    <div class="insight-toolbar-right">
+      <label>Order by:</label>
+      <select name="order" onchange="this.form.submit()">
+        <option value="name_asc"  {% if order=='name_asc' %}selected{% endif %}>Name Ascending</option>
+        <option value="name_desc" {% if order=='name_desc' %}selected{% endif %}>Name Descending</option>
+        <option value="count_desc" {% if order=='count_desc' %}selected{% endif %}>Most Datasets</option>
+        <option value="count_asc" {% if order=='count_asc' %}selected{% endif %}>Fewest Datasets</option>
+      </select>
+    </div>
+  </form>
+
+  <p class="muted" style="margin:8px 0 16px;">{{ total }} groups found</p>
+
   {% if not groups or groups|length == 0 %}
-    <p>Belum ada Insight Group. Tambahkan tag <code>insight</code> pada dataset beserta tag-topik lain (mis. <code>health</code>), atau jalankan sinkronisasi CLI.</p>
+    <div class="alert alert-info">
+      Belum ada Insight Group. Tambahkan tag <code>{{ marker_tag }}</code> pada dataset beserta tag-topik lain
+      (mis. <code>health</code>), atau klik <strong>Tambah Insight</strong>.
+    </div>
   {% else %}
-    <ul class="dataset-list">
+    <div class="insight-grid">
       {% for g in groups %}
-        <li>
-          <a href="{{ h.url_for('group.read', id=g.name) }}">{{ g.title }}</a>
-          <span class="muted">— {{ g.package_count }} dataset</span>
-        </li>
+        <div class="insight-card">
+          <a class="card-link" href="{{ h.url_for('group.read', id=g.name) }}">
+            <div class="thumb">
+              {% if g.image_url %}
+                <img src="{{ g.image_url }}" alt="{{ g.title }}">
+              {% else %}
+                <div class="thumb-placeholder"><i class="fa fa-folder-open"></i></div>
+              {% endif %}
+            </div>
+            <div class="meta">
+              <h3 class="title" title="{{ g.title }}">{{ g.title }}</h3>
+              <div class="count">{{ g.package_count }} Dataset{% if g.package_count != 1 %}s{% endif %}</div>
+            </div>
+          </a>
+        </div>
       {% endfor %}
-    </ul>
+    </div>
+
+    {# pagination #}
+    {% if pages > 1 %}
+      <ul class="pagination">
+        {% set qs_base = 'q=' ~ (q or '') ~ '&order=' ~ (order or 'name_asc') %}
+        <li class="{% if page==1 %}disabled{% endif %}">
+          <a href="?{{ qs_base }}&page={{ page-1 if page>1 else 1 }}">&laquo;</a>
+        </li>
+        {% for p in range(1, pages+1) %}
+          <li class="{% if p==page %}active{% endif %}">
+            <a href="?{{ qs_base }}&page={{ p }}">{{ p }}</a>
+          </li>
+        {% endfor %}
+        <li class="{% if page==pages %}disabled{% endif %}">
+          <a href="?{{ qs_base }}&page={{ page+1 if page<pages else pages }}">&raquo;</a>
+        </li>
+      </ul>
+    {% endif %}
   {% endif %}
 {% endblock %}
