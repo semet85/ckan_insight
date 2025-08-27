@@ -159,6 +159,7 @@ cd ckan_insight
 python setup.py develop
 pip install -r dev-requirements.txt
 apt update && apt install nano -y
+nano /srv/app/production.ini
 ```
 
 2. Install dalam mode *develop* (editable):
