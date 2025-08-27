@@ -1,7 +1,7 @@
 from math import ceil
 from flask import Blueprint, render_template, request, redirect
 import ckan.plugins.toolkit as toolkit
-import ckan.lib.authz as authz
+import ckan.authz as authz
 
 blueprint = Blueprint('ckanet_insight', __name__)
 
