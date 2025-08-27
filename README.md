@@ -154,7 +154,7 @@ docker compose -f docker-compose.prod.yml exec ckan-web \\
 ```bash
 docker compose exec -u root ckan bash
 cd src
-git clone git clone https://github.com/semet85/ckanet_insight.git
+git clone git clone https://github.com/semet85/ckan_insight.git
 cd ckan_insight
 python setup.py develop
 pip install -r dev-requirements.txt
