@@ -1,33 +1,36 @@
 from math import ceil
 from flask import Blueprint, render_template, request, redirect
 import ckan.plugins.toolkit as toolkit
-import ckan.authz as authz
+import ckan.authz as authz  # CKAN 2.9: modul authz ada di ckan.authz
 
 blueprint = Blueprint('ckanet_insight', __name__)
+
 
 def _marker_tag():
     return toolkit.config.get('ckanet.insight_tag', 'insight')
 
+
 def _current_user():
-    # kompatibel ckan 2.9 (flask global)
+    # kompatibel di CKAN 2.9 (Flask)
     return getattr(toolkit.g, 'user', '') or getattr(toolkit.c, 'user', '') or ''
 
-def _require_sysadmin():
-    user = _current_user()
-    if not user or not authz.is_sysadmin(user):
-        toolkit.abort(403, toolkit._('Not authorized to access this page.'))  # 403 untuk non-admin
 
 @blueprint.route('/insights/')
 def insights_home():
+    """
+    Grid 'Insight Groups' dengan search, sort, dan pagination.
+    """
     ctx = {'ignore_auth': True}
     q = (request.args.get('q') or '').strip().lower()
     order = (request.args.get('order') or 'name_asc').strip()
     page = int(request.args.get('page', 1) or 1)
     per_page = 12
 
+    # Ambil semua group berawalan insight-
     groups = toolkit.get_action('group_list')(ctx, {'all_fields': True})
     insight_groups = [g for g in groups if (g.get('name') or '').startswith('insight-')]
 
+    # Lengkapi detail
     results = []
     for g in insight_groups:
         g_full = toolkit.get_action('group_show')(ctx, {'id': g['name'], 'include_datasets': True})
@@ -39,22 +42,57 @@ def insights_home():
             'image_url': g_full.get('image_display_url') or g_full.get('image_url') or '',
         })
 
-    # ... (filter, sort, pagination seperti versi kamu saat ini) ...
+    # Search sederhana
+    if q:
+        results = [
+            r for r in results
+            if q in (r['title'] or '').lower()
+            or q in (r['description'] or '').lower()
+            or q in (r['name'] or '').lower()
+        ]
 
-    is_sysadmin = authz.is_sysadmin(_current_user())
+    # Ordering
+    if order == 'name_desc':
+        results.sort(key=lambda x: x['title'].lower(), reverse=True)
+    elif order == 'count_desc':
+        results.sort(key=lambda x: (-x['package_count'], x['title'].lower()))
+    elif order == 'count_asc':
+        results.sort(key=lambda x: (x['package_count'], x['title'].lower()))
+    else:  # name_asc
+        results.sort(key=lambda x: x['title'].lower())
+
+    # Pagination
+    total = len(results)
+    pages = max(1, int(ceil(total / float(per_page)))) if per_page else 1
+    if page < 1:
+        page = 1
+    if page > pages:
+        page = pages
+    start = (page - 1) * per_page
+    end = start + per_page
+    page_items = results[start:end]
+
     return render_template(
         'insight/index.html',
-        groups=results,  # atau page_items jika kamu pakai pagination
-        # total=total, page=page, pages=pages, q=q, order=order, ...
+        groups=page_items,
+        total=total,
+        page=page,
+        pages=pages,
+        q=q,
+        order=order,
         marker_tag=_marker_tag(),
-        is_sysadmin=is_sysadmin,  # ⬅️ kirim ke template
+        is_sysadmin=authz.is_sysadmin(_current_user()),
     )
+
 
 @blueprint.route('/insights/add', methods=['GET', 'POST'])
 def insights_add():
-    _require_sysadmin()  # ⬅️ wajib admin
+    # Hanya sysadmin
+    if not authz.is_sysadmin(_current_user()):
+        toolkit.abort(403, toolkit._('Not authorized to access this page.'))
 
     marker = _marker_tag()
+
     if request.method == 'POST':
         dataset_ref = (request.form.get('dataset') or '').strip()
         topics_raw = (request.form.get('topics') or '')
@@ -72,7 +110,10 @@ def insights_add():
             return render_template('insight/add.html', dataset=dataset_ref, topics=topics_raw, marker_tag=marker)
 
         existing = [t.get('name') for t in (pkg.get('tags') or []) if t.get('name')]
-        wanted = set(existing); wanted.add(marker); [wanted.add(t) for t in topics]
+        wanted = set(existing)
+        wanted.add(marker)
+        for t in topics:
+            wanted.add(t)
         new_tags = [{'name': name} for name in sorted(wanted)]
 
         try:
@@ -88,4 +129,5 @@ def insights_add():
 
         return render_template('insight/add.html', dataset=dataset_ref, topics=topics_raw, marker_tag=marker)
 
+    # GET
     return render_template('insight/add.html', marker_tag=marker)

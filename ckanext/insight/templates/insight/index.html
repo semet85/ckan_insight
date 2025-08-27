@@ -99,3 +99,9 @@
     {% endif %}
   {% endif %}
 {% endblock %}
+
+{% set total = total|default(groups|length) %}
+{% set page  = page|default(1) %}
+{% set pages = pages|default(1) %}
+{% set order = order|default('name_asc') %}
+{% set q     = q|default('') %}
