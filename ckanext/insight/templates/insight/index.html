@@ -4,104 +4,181 @@
 {% block styles %}
   {{ super() }}
   <style>
-    /* toolbar */
-    .insight-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 12px;}
-    .insight-toolbar .search-input{display:flex;gap:6px;}
-    .insight-toolbar .search-input input{padding:6px 10px;min-width:260px;border:1px solid #ddd;border-radius:4px;}
-    /* grid */
-    .insight-grid{display:grid;grid-template-columns: repeat(auto-fill, minmax(220px,1fr));gap:14px;}
-    .insight-card{background:#fff;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden;transition:box-shadow .15s ease, transform .05s ease;}
-    .insight-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.08); transform: translateY(-1px);}
-    .insight-card .card-link{display:block;color:inherit;text-decoration:none}
-    .insight-card .thumb{height:130px;background:#fafafa;display:flex;align-items:center;justify-content:center;}
-    .insight-card .thumb img{max-width:100%;max-height:100%;object-fit:contain;}
-    .insight-card .thumb-placeholder{font-size:40px;color:#bbb;}
-    .insight-card .meta{padding:12px;}
-    .insight-card .title{font-size:16px;line-height:1.25;margin:0 0 6px;max-height:40px;overflow:hidden;}
-    .insight-card .count{color:#888;font-size:13px;}
-    /* pagination */
-    .pagination{margin:18px 0;}
+    /* ========= Layout & Container ========= */
+    .insight-wrap{
+      max-width: 1200px;
+      margin: 10px auto 20px;
+      padding: 0 12px;
+    }
+    .insight-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      margin-bottom: 10px;
+    }
+    .insight-head .page-heading{margin:0;}
+
+    /* ========= Toolbar ========= */
+    .insight-toolbar{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      margin: 8px 0 10px;
+      flex-wrap: wrap;
+    }
+    .insight-toolbar .search{
+      display:flex;align-items:center;gap:6px;flex:1 1 480px;
+      max-width: 620px;
+    }
+    .insight-toolbar .search input{
+      flex:1 1 auto;
+      padding:8px 12px;border:1px solid #ddd;border-radius:6px;
+      height: 36px;
+    }
+    .insight-toolbar .search button{
+      height:36px; line-height:20px;
+    }
+    .insight-toolbar .order{
+      display:flex;align-items:center;gap:8px;white-space:nowrap;
+    }
+    .insight-toolbar .order select{
+      height:36px; padding:6px 10px; border-radius:6px;
+      border:1px solid #ddd; background:#fff;
+    }
+
+    /* ========= Grid ========= */
+    .insight-grid{
+      --min: 240px; /* ubah untuk lebar kartu minimum */
+      display:grid;gap:14px;
+      grid-template-columns: repeat(auto-fill, minmax(var(--min),1fr));
+    }
+
+    /* ========= Card ========= */
+    .insight-card{
+      background:#fff;border:1px solid #e8e8e8;border-radius:8px;
+      overflow:hidden;transition:box-shadow .15s ease, transform .05s ease;
+      display:flex;flex-direction:column;min-height: 220px;
+    }
+    .insight-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08); transform: translateY(-1px);}
+    .insight-card .card-link{display:flex;flex-direction:column;flex:1 1 auto;color:inherit;text-decoration:none}
+    .insight-card .thumb{
+      height:140px;background:#fafafa;display:flex;align-items:center;justify-content:center;
+      border-bottom:1px solid #f0f0f0;
+    }
+    .insight-card .thumb img{max-width:100%;max-height:100%;object-fit:contain}
+    .insight-card .thumb-placeholder{font-size:42px;color:#bbb}
+    .insight-card .meta{padding:12px 12px 14px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+    .insight-card .title{
+      font-size:16px;line-height:1.25;margin:0 0 6px;
+      max-height:40px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    }
+    .insight-card .desc{
+      color:#666;font-size:12px;margin:0 0 8px;max-height:34px;overflow:hidden;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    }
+    .insight-card .badge{
+      display:inline-block;background:#eef5ff;color:#0b5ed7;border:1px solid #dbe8ff;
+      font-size:12px;padding:3px 8px;border-radius:999px;white-space:nowrap;flex:0 0 auto;height:fit-content
+    }
+
+    /* ========= Summary / Pagination ========= */
+    .insight-summary{color:#777;margin:6px 0 14px;}
+    .pagination{margin:18px 0 6px;}
     .pagination li{display:inline-block;margin-right:4px;}
-    .pagination li a{display:inline-block;padding:6px 10px;border:1px solid #ddd;border-radius:4px;text-decoration:none}
+    .pagination li a{display:inline-block;padding:6px 10px;border:1px solid #ddd;border-radius:6px;text-decoration:none;background:#fff}
     .pagination li.active a{background:#0d6efd;color:#fff;border-color:#0d6efd}
     .pagination li.disabled a{color:#bbb;pointer-events:none}
+
+    /* ========= Buttons area ========= */
+    .page-actions{display:flex;gap:6px;flex-wrap:wrap;}
+    .page-actions .btn{border-radius:6px}
+    @media (max-width: 600px){
+      .insight-toolbar .order{width:100%;justify-content:flex-end}
+    }
   </style>
 {% endblock %}
 
 {% block content %}
-  <div class="page-heading-wrapper" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-    <h1 class="page-heading" style="margin:0;">Insights</h1>
-    <div class="page-actions">
-      {% if is_sysadmin or (c.userobj and c.userobj.sysadmin) %}
-        <a class="btn btn-primary" href="{{ h.url_for('ckanet_insight.insights_add') }}">
-          <i class="fa fa-plus"></i> Tambah Insight
-        </a>
-      {% endif %}
-      <a class="btn btn-default" href="{{ h.url_for('dataset.new') }}">Buat Dataset Baru</a>
-    </div>
-  </div>
+  {% set total = total|default(groups|length) %}
+  {% set page  = page|default(1) %}
+  {% set pages = pages|default(1) %}
+  {% set order = order|default('name_asc') %}
+  {% set q     = q|default('') %}
 
-  <form method="get" class="form-inline insight-toolbar">
-    <div class="insight-toolbar-left">
-      <div class="search-input">
-        <input type="text" name="q" value="{{ q or '' }}" placeholder="Cari Insight...">
-        <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+  <div class="insight-wrap">
+    <div class="insight-head">
+      <h1 class="page-heading">Insights</h1>
+      <div class="page-actions">
+        {% if is_sysadmin or (c.userobj and c.userobj.sysadmin) %}
+          <a class="btn btn-primary" href="{{ h.url_for('ckanet_insight.insights_add') }}">
+            <i class="fa fa-plus"></i> Tambah Insight
+          </a>
+        {% endif %}
+        <a class="btn btn-default" href="{{ h.url_for('dataset.new') }}">Buat Dataset Baru</a>
       </div>
     </div>
-    <div class="insight-toolbar-right">
-      <label>Order by:</label>
-      <select name="order" onchange="this.form.submit()">
-        <option value="name_asc"  {% if order=='name_asc' %}selected{% endif %}>Name Ascending</option>
-        <option value="name_desc" {% if order=='name_desc' %}selected{% endif %}>Name Descending</option>
-        <option value="count_desc" {% if order=='count_desc' %}selected{% endif %}>Most Datasets</option>
-        <option value="count_asc" {% if order=='count_asc' %}selected{% endif %}>Fewest Datasets</option>
-      </select>
-    </div>
-  </form>
 
-  <p class="muted" style="margin:8px 0 16px;">{{ total }} groups found</p>
+    <form method="get" class="insight-toolbar">
+      <div class="search">
+        <input type="text" name="q" value="{{ q }}" placeholder="Cari Insight...">
+        <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+      </div>
+      <div class="order">
+        <label style="margin:0;">Order by:</label>
+        <select name="order" onchange="this.form.submit()">
+          <option value="name_asc"  {% if order=='name_asc' %}selected{% endif %}>Name Ascending</option>
+          <option value="name_desc" {% if order=='name_desc' %}selected{% endif %}>Name Descending</option>
+          <option value="count_desc" {% if order=='count_desc' %}selected{% endif %}>Most Datasets</option>
+          <option value="count_asc" {% if order=='count_asc' %}selected{% endif %}>Fewest Datasets</option>
+        </select>
+      </div>
+    </form>
 
-  {% if not groups or groups|length == 0 %}
-    <div class="alert alert-info">
-      Belum ada Insight Group. Tambahkan tag <code>{{ marker_tag }}</code> pada dataset beserta tag-topik lain
-      (mis. <code>health</code>), atau klik <strong>Tambah Insight</strong>.
-    </div>
-  {% else %}
-    <div class="insight-grid">
-      {% for g in groups %}
-        <div class="insight-card">
-          <a class="card-link" href="{{ h.url_for('group.read', id=g.name) }}">
-            <div class="thumb">
-              {% if g.image_url %}
-                <img src="{{ g.image_url }}" alt="{{ g.title }}">
-              {% else %}
-                <div class="thumb-placeholder"><i class="fa fa-folder-open"></i></div>
-              {% endif %}
-            </div>
-            <div class="meta">
-              <h3 class="title" title="{{ g.title }}">{{ g.title }}</h3>
-              <div class="count">{{ g.package_count }} Dataset{% if g.package_count != 1 %}s{% endif %}</div>
-            </div>
-          </a>
-        </div>
-      {% endfor %}
-    </div>
+    <div class="insight-summary">{{ total }} groups found</div>
 
-    {% if pages > 1 %}
-      <ul class="pagination">
-        {% set qs_base = 'q=' ~ (q or '') ~ '&order=' ~ (order or 'name_asc') %}
-        <li class="{% if page==1 %}disabled{% endif %}"><a href="?{{ qs_base }}&page={{ page-1 if page>1 else 1 }}">&laquo;</a></li>
-        {% for p in range(1, pages+1) %}
-          <li class="{% if p==page %}active{% endif %}"><a href="?{{ qs_base }}&page={{ p }}">{{ p }}</a></li>
+    {% if not groups or groups|length == 0 %}
+      <div class="alert alert-info">
+        Belum ada Insight Group. Tambahkan tag <code>{{ marker_tag }}</code> pada dataset beserta tag-topik lain
+        (mis. <code>health</code>), atau klik <strong>Tambah Insight</strong>.
+      </div>
+    {% else %}
+      <div class="insight-grid">
+        {% for g in groups %}
+          <div class="insight-card">
+            <a class="card-link" href="{{ h.url_for('group.read', id=g.name) }}">
+              <div class="thumb">
+                {% if g.image_url %}
+                  <img src="{{ g.image_url }}" alt="{{ g.title }}">
+                {% else %}
+                  <div class="thumb-placeholder"><i class="fa fa-folder-open"></i></div>
+                {% endif %}
+              </div>
+              <div class="meta">
+                <div>
+                  <h3 class="title" title="{{ g.title }}">{{ g.title }}</h3>
+                  {% if g.description %}
+                    <div class="desc">{{ g.description }}</div>
+                  {% endif %}
+                </div>
+                <span class="badge">{{ g.package_count }} dataset{% if g.package_count != 1 %}s{% endif %}</span>
+              </div>
+            </a>
+          </div>
         {% endfor %}
-        <li class="{% if page==pages %}disabled{% endif %}"><a href="?{{ qs_base }}&page={{ page+1 if page<pages else pages }}">&raquo;</a></li>
-      </ul>
-    {% endif %}
-  {% endif %}
-{% endblock %}
+      </div>
 
-{% set total = total|default(groups|length) %}
-{% set page  = page|default(1) %}
-{% set pages = pages|default(1) %}
-{% set order = order|default('name_asc') %}
-{% set q     = q|default('') %}
+      {% if pages > 1 %}
+        <ul class="pagination">
+          {% set qs_base = 'q=' ~ q ~ '&order=' ~ order %}
+          <li class="{% if page==1 %}disabled{% endif %}">
+            <a href="?{{ qs_base }}&page={{ page-1 if page>1 else 1 }}">&laquo;</a>
+          </li>
+          {% for p in range(1, pages+1) %}
+            <li class="{% if p==page %}active{% endif %}">
+              <a href="?{{ qs_base }}&page={{ p }}">{{ p }}</a>
+            </li>
+          {% endfor %}
+          <li class="{% if page==pages %}disabled{% endif %}">
+            <a href="?{{ qs_base }}&page={{ page+1 if page<pages else pages }}">&raquo;</a>
+          </li>
+        </ul>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endblock %}
