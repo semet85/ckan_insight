@@ -88,8 +88,8 @@
               <span class="ins-chip">{{ g.package_count }} dataset{% if g.package_count != 1 %}s{% endif %}</span>
             </div>
             <div class="ins-body">
-              <div class="ins-title" title="{{ g.title }}">{{ g.title }}</div>
-              {% if g.description %}<div class="ins-desc">{{ g.description }}</div>{% endif %}
+              <div class="ins-title" title="{{ g.title }}"><span class="ins-extra">Data </span>{{ g.title }}</div>
+              <!--{% if g.description %}<div class="ins-desc">{{ g.description }}</div>{% endif %}-->
             </div>
           </a>
         {% endfor %}
