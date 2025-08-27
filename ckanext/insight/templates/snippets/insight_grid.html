@@ -64,13 +64,12 @@
 <div class="module ins-section" id="insight-grid-section">
   <div class="module-content">
     <h2 class="text-center mb-4" data-aos="fade-up"><i class="fas fa-id-card"></i> Data Insight</h2>
-    <div class="ins-header" data-aos="fade-up" data-aos-delay="80">
-      <!-- <h3 class="module-heading">{{ _title }}</h3> -->
+    <div class="ins-header ins-header--right" data-aos="fade-up" data-aos-delay="80">
       <a class="btn-ghost" href="{{ _more }}">Lihat semua <i class="fa fa-arrow-right"></i></a>
     </div>
 
     {% if not _groups %}
-      <p class="ins-empty" data-aos="fade-up" data-aos-delay="120">Belum ada insight untuk ditampilkan.</p>
+      <p class="ins-empty" data-aos="fade-up" data-aos-delay="120">Belum ada data insight untuk ditampilkan.</p>
     {% else %}
       <div class="ins-grid">
         {% for g in _groups %}
